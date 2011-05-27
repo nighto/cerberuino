@@ -19,7 +19,7 @@ const int ledRPin =     7;
 const int analogValueOn = 255;
 const int analogValueOff = 0;
 
-const int debugDelay = 1000;
+const int debugDelay = 500;
 
 /* Speaker */
 
@@ -35,17 +35,18 @@ const char beethoven[] = {	64,4,64,4,65,4,67,4,		67,4,65,4,64,4,62,4,
 			62,4,64,8,65,8,64,4,62,4,	60,4,62,4,55,2,
 			64,4,64,4,65,4,67,4,		67,4,65,4,64,4,62,4,
 			60,4,60,4,62,4,64,4,		62,-4,60,8,60,2};
-// 72 do 74 re 76 mi 77 fa 79 sol 81 la 83 si 84 do 86 re 88 mi
-// mi-re fa# sol#, do#-si re mi, si-la do# mi sool#
 
-const char nokia[] = {88,8,86,8,78,4,79,4, 85,8,83,8,74,4,76,4, 83,8,81,8,73,4,76,4, 80,2};
+// 72 do 74 re 76 mi 77 fa 79 sol 81 la 83 si 84 do 86 re 88 mi
+// mi-re fa# sol#, do#-si re mi, si-la do# mi laaa
+
+const char nokia[] = {88,8,86,8,78,4,79,4, 85,8,83,8,74,4,76,4, 83,8,81,8,73,4,76,4, 81,2};
 
 const char scale[] = {60,16,62,16,64,16,65,16,67,16,69,16,71,16,72,8};
 
 int period, i;
 unsigned int timeUp, beat;
 byte statePin = LOW;
-const byte BPM = 120;
+const byte BPM = 240;
 const float TEMPO_SECONDS = 60.0 / BPM; 
 const unsigned int MAXCOUNT = sizeof(nokia) / 2;
 
@@ -58,16 +59,22 @@ void setup() {
   
   pinMode(speakerPin, OUTPUT);
   
+  pinMode(switchPin, INPUT);
+  
   setupSpeaker();
-}
-
-void loop() {
+  
   debug();
 }
 
+void loop() {
+  //
+}
+
 void debug() {
-  //debugBlinkLeds();
-  debugPlayMusic(nokia);
+  beep();
+  debugBlinkLeds();
+  //debugPlayMusic(nokia);
+  debugSwitch();
 }
 
 /* LEDs */
@@ -83,14 +90,14 @@ void blinkDigitalLed(int pin) {
   digitalLedOn(pin);
   delay(debugDelay);
   digitalLedOff(pin);
-  delay(debugDelay);
+  //delay(debugDelay);
 }
 
 void blinkAnalogLed(int pin) {
-  analogLedOn(ledBPin);
+  analogLedOn(pin);
   delay(debugDelay);
-  analogLedOff(ledBPin);
-  delay(debugDelay);
+  analogLedOff(pin);
+  //delay(debugDelay);
 }
 
 void digitalLedOn(int pin) {
@@ -110,6 +117,15 @@ void analogLedOff(int pin) {
 }
 
 /* Speaker */
+
+void beep() {
+  for (int i=0; i<200; i++) {  // generate a 1KHz tone for 1/2 second
+    digitalWrite(speakerPin, HIGH);
+    delayMicroseconds(500);
+    digitalWrite(speakerPin, LOW);
+    delayMicroseconds(500);
+  } 
+}
 
 void setupSpeaker() {
   for (i = 0; i < 114; i++)
@@ -139,4 +155,21 @@ void debugPlayMusic(const char song[]) {
   }
   digitalWrite(speakerPin, LOW);
   delay(1000);
+}
+
+/* Switch */
+
+void debugSwitch() {
+  int switchState = digitalRead(switchPin);
+  
+  digitalWrite(ledRPin, HIGH);
+  
+  while(switchState == LOW) {
+    beep();
+    delay(500);
+    switchState = digitalRead(switchPin);
+  }
+
+  digitalWrite(ledRPin, LOW);
+  blinkAnalogLed(ledGPin);
 }
