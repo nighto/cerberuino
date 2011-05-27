@@ -27,7 +27,7 @@ const int debugDelay = 1000;
 /* MIDI notes from 0 to 113. */
 unsigned int timeUpDown[114];
 
-const char song[] = {	64,4,64,4,65,4,67,4,		67,4,65,4,64,4,62,4,
+const char beethoven[] = {	64,4,64,4,65,4,67,4,		67,4,65,4,64,4,62,4,
 			60,4,60,4,62,4,64,4,		64,-4,62,8,62,2,
 			64,4,64,4,65,4,67,4,		67,4,65,4,64,4,62,4,
 			60,4,60,4,62,4,64,4,		62,-4,60,8,60,2,
@@ -35,13 +35,19 @@ const char song[] = {	64,4,64,4,65,4,67,4,		67,4,65,4,64,4,62,4,
 			62,4,64,8,65,8,64,4,62,4,	60,4,62,4,55,2,
 			64,4,64,4,65,4,67,4,		67,4,65,4,64,4,62,4,
 			60,4,60,4,62,4,64,4,		62,-4,60,8,60,2};
+// 72 do 74 re 76 mi 77 fa 79 sol 81 la 83 si 84 do 86 re 88 mi
+// mi-re fa# sol#, do#-si re mi, si-la do# mi sool#
+
+const char nokia[] = {88,8,86,8,78,4,79,4, 85,8,83,8,74,4,76,4, 83,8,81,8,73,4,76,4, 80,2};
+
+const char scale[] = {60,16,62,16,64,16,65,16,67,16,69,16,71,16,72,8};
 
 int period, i;
 unsigned int timeUp, beat;
 byte statePin = LOW;
 const byte BPM = 120;
 const float TEMPO_SECONDS = 60.0 / BPM; 
-const unsigned int MAXCOUNT = sizeof(song) / 2;
+const unsigned int MAXCOUNT = sizeof(nokia) / 2;
 
 /* /Speaker */
 
@@ -60,8 +66,8 @@ void loop() {
 }
 
 void debug() {
-  debugBlinkLeds();
-  debugPlayBeethoven();
+  //debugBlinkLeds();
+  debugPlayMusic(nokia);
 }
 
 /* LEDs */
@@ -110,7 +116,7 @@ void setupSpeaker() {
     timeUpDown[i] = 1000000 / (pow(2, (i - 69) / 12.0) * 880);
 }
 
-void debugPlayBeethoven() {
+void debugPlayMusic(const char song[]) {
   digitalWrite(speakerPin, LOW);     
   for (beat = 0; beat < MAXCOUNT; beat++) {
     statePin = !statePin;
