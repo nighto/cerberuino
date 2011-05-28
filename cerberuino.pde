@@ -7,31 +7,23 @@
    Uses square wave tune code from: Daniel Gimpelevich - http://www.arduino.cc/playground/Code/MusicalAlgoFun
 */
 
-#include <SPI.h>         // needed for Arduino versions later than 0018
-#include <Ethernet.h>
-#include <Udp.h>         // UDP library from: bjoern@cs.stanford.edu 12/30/2008
+#include <EtherShield.h>
+#include <EtherShieldUDP.h>
+
 
 // Enter a MAC address and IP address for your controller below.
 // The IP address will be dependent on your local network:
-byte mac[] = {  
-  0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
-byte ip[] = { 
-  10,0,0,9 };
+static uint8_t mymac[6] = {
+  0x54,0x55,0x58,0x10,0x00,0x25}; 
+  
+static uint8_t myip[4] = {
+  10,0,0,8};
+  
 
-unsigned int localPort = 11000;      // local port to listen on
+static uint16_t localPort = 50000;
+static uint16_t remotePort = 11000;
 
-// the next two variables are set when a packet is received
-byte broadcastIp[] = { 
-  10,0,0,100 };
-
-byte remoteIp[4];        // holds received packet's originating IP
-unsigned int remotePort; // holds received packet's originating port
-
-// buffers for receiving and sending data
-char packetBuffer[UDP_TX_PACKET_MAX_SIZE]; //buffer to hold incoming packet,
-char  DoorBellRinging[] = "DOORRINGING";      // a string to send back
-
-
+static EtherShieldUDP udp = EtherShieldUDP();
 
 const int serialRxPin = 0; // RX
 const int serialTxPin = 1; // TX
@@ -68,6 +60,10 @@ const char beethoven[] = {	64,4,64,4,65,4,67,4,		67,4,65,4,64,4,62,4,
 
 const char nokia[] = {88,8,86,8,78,4,79,4, 85,8,83,8,74,4,76,4, 83,8,81,8,73,4,76,4, 81,2};
 
+// mi mi __ mi __ do mi __ sol __ __ __ sol
+
+const char mario[] = {76,8,76,8,0,8,76,8,0,8,72,8,76,8,0,8,79,8,0,4,0,8,67,8};
+
 const char scale[] = {60,16,62,16,64,16,65,16,67,16,69,16,71,16,72,8};
 
 int period, i;
@@ -75,7 +71,7 @@ unsigned int timeUp, beat;
 byte statePin = LOW;
 const byte BPM = 240;
 const float TEMPO_SECONDS = 60.0 / BPM; 
-const unsigned int MAXCOUNT = sizeof(nokia) / 2;
+const unsigned int MAXCOUNT = sizeof(mario) / 2;
 
 
 int loops = 0;
@@ -93,10 +89,8 @@ void setup() {
   
   setupSpeaker();
   
-  
   // start the Ethernet and UDP:
-  Ethernet.begin(mac,ip);
-  Udp.begin(localPort);
+  udp.configure(mymac, myip, localPort, remotePort);
 
   Serial.begin(9600);
   
@@ -106,18 +100,8 @@ void setup() {
 
 
 void loop() {
-  
-  loops++;
-  if (loops < 5) {
-      analogLedOn(ledBPin);
-  } else if (loops > 10) {
-      analogLedOff(ledBPin);
-  } 
-  
-  if (loops > 150) {
-      loops = 0;
-  } 
-  
+  loopsCount();
+ 
   Serial.println(loops);
     
   checkDoorBell();
@@ -129,8 +113,21 @@ void loop() {
 
 /////// ### REAL PROGRAM!
 
+void loopsCount() {
+  loops++;
+  if (loops < 5) {
+      analogLedOn(ledBPin);
+  } else if (loops > 10) {
+      analogLedOff(ledBPin);
+  } 
+  
+  if (loops > 150) {
+      loops = 0;
+  } 
+}
+
 void playDoorBell() {
-  debugPlayMusic(nokia);
+  debugPlayMusic(mario);
 }
 
 void checkDoorBell() {
@@ -139,7 +136,7 @@ void checkDoorBell() {
   if (digitalRead(switchPin) == HIGH) {
     Serial.println("checkDoorBell-HIGH");
     
-    //notifyComputers();
+    notifyComputers();
     playDoorBell();
     notifyComputers();
   }
@@ -148,32 +145,19 @@ void checkDoorBell() {
 
 
 void notifyComputers() {
-    
-    Udp.sendPacket(DoorBellRinging, broadcastIp, localPort);
+    udp.sendBroadcast("DOORBELL");
 }
 
 void checkOpenDoorRequests() {
   
+  int dat_p = udp.receiveTCP();
   
-  Serial.println("checkOpenDoorRequests");
-  // if there's data available, read a packet
-  int packetSize = Udp.available(); // note that this includes the UDP header
-  if(packetSize)
-  {
-    packetSize = packetSize - 8;      // subtract the 8 byte header
-    Serial.print("Received packet of size ");
-    Serial.println(packetSize);
-
-    // read the packet into packetBufffer and get the senders IP addr and port number
-    Udp.readPacket(packetBuffer,UDP_TX_PACKET_MAX_SIZE, remoteIp, remotePort);
-    Serial.println("Contents:");
-    Serial.println(packetBuffer);
+  if(dat_p != 0) {
+    String receivedString = udp.getReceivedString(dat_p);
     
-    if (packetBuffer == "OPENDOOR")
-    {
+    if (receivedString.equals("OPENDOOR")) {
         openDoor();
     }
-
     
   }
 }
