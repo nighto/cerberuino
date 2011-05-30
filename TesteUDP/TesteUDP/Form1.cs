@@ -24,14 +24,11 @@ namespace TesteUDP
         {
             //Start
             backgroundWorker1.RunWorkerAsync();
-
-
         }
 
         private void button2_Click(object sender, EventArgs e)
         {
             var text_to_send = textBox2.Text;
-
 
             IPAddress send_to_address = IPAddress.Broadcast;// IPAddress.Parse("10.0.0.9");
             IPEndPoint sending_end_point = new IPEndPoint(send_to_address, listenPort);
@@ -50,7 +47,6 @@ namespace TesteUDP
                 // Remind the user of where this is going.
                 AddLog(String.Format("SND-sending to address: {0} port: {1}", sending_end_point.Address, sending_end_point.Port));
 
-
                 try
                 {
                     sending_socket.SendTo(send_buffer, sending_end_point);
@@ -62,14 +58,10 @@ namespace TesteUDP
                     AddLog("SND-Erro! " + send_exception.Message);
                 }
             }
-        
         }
 
         private void backgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
         {
-
-
-
             bool done = false;
             UdpClient listener = new UdpClient(listenPort, AddressFamily.InterNetwork);
             IPEndPoint groupEP = new IPEndPoint(IPAddress.Parse("10.0.0.100"), listenPort);
@@ -81,8 +73,6 @@ namespace TesteUDP
             {
                 while (!done)
                 {
-                    
-
                     receive_byte_array = listener.Receive(ref groupEP);
                     received_data = Encoding.ASCII.GetString(receive_byte_array, 0, receive_byte_array.Length);
 
@@ -109,29 +99,32 @@ namespace TesteUDP
                 textBox1.Text = String.Format("{0}-{1}\r\n{2}", DateTime.Now.ToString("HH:mm:ss"), text, textBox1.Text);
         }
 
-        private void button3_Click(object sender, EventArgs e)
+        public void OpenTheDoor()
         {
-            var text_to_send = textBox2.Text;
+            string message = "OPENDOOR";
+            IPAddress ip = IPAddress.Parse("10.0.0.8");
+            int port = listenPort; //11000;
 
+            IPEndPoint endpoint = new IPEndPoint(ip, port);
 
-            IPAddress send_to_address = IPAddress.Parse("10.0.0.8");
-            IPEndPoint sending_end_point = new IPEndPoint(send_to_address, listenPort);
+            SendMessage(message, endpoint);
+        }
 
-
+        public void SendMessage(string message, IPEndPoint endpoint)
+        {
             TcpClient client = new TcpClient();
 
             // the socket object must have an array of bytes to send.
             // this loads the string entered by the user into an array of bytes.
-            byte[] send_buffer = Encoding.ASCII.GetBytes(text_to_send);
+            byte[] sendBuffer = Encoding.ASCII.GetBytes(message);
 
             // Remind the user of where this is going.
-            AddLog(String.Format("SND-sending to address: {0} port: {1}", sending_end_point.Address, sending_end_point.Port));
-
+            AddLog(String.Format("SND-sending to address: {0} port: {1}", endpoint.Address, endpoint.Port));
 
             try
             {
-                client.Connect("10.0.0.8", listenPort);
-                client.Client.Send(send_buffer);
+                client.Connect(endpoint);
+                client.Client.Send(sendBuffer);
 
                 client.Close();
                 AddLog("SND-Message OK");
@@ -140,9 +133,11 @@ namespace TesteUDP
             {
                 AddLog("SND-Erro! " + send_exception.Message);
             }
+        }
 
-           
-        
+        private void button3_Click(object sender, EventArgs e)
+        {
+            OpenTheDoor();
         }
     }
 }
