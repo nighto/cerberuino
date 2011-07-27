@@ -1,10 +1,10 @@
 Cerberuino is a door/gate controller using Arduino.
 
 Requirements:
-- Arduino
-- Ethernet Shield
-- RFID Reader
-- Homemade connector shield (optional)
+- Arduino (we used Brasuino BS1, a Arduino One compatible)
+- EtherShield w/ ENC28J60 (we bought it from seeedstudio.com)
+- RFID Reader (idem)
+- Homemade connector shield (optional, we created a shield instead of plugging the wires directly, and connected them using Ethernet Cables on the following table. Schematics should be put online soon)
 
 Pin		Type	Function	Eth. Cable
 ===		====	========	==========
